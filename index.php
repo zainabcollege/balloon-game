@@ -5,73 +5,69 @@ include('config.php');
 $error = '';
 $success = '';
 
-// Check if user is already logged in
+// If already logged in, redirect to home
 if (isset($_SESSION['user'])) {
-    header('location:home.php');
-    exit;
+    header('location:home.php'); exit;
 }
 
-// Handle Login
+// Login POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
-    
-    if (empty($username) || empty($password)) {
-        $error = "Username and password are required!";
+    if ($username == '' || $password == '') {
+        $error = "Username and password required!";
     } else {
-        try {
-            $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
-            $stmt->execute([$username]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($user && password_verify($password, $user['password'])) {
+        $stmt = $conn->prepare("SELECT * FROM users WHERE username=?");
+        $stmt->bind_param('s', $username);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($user = $res->fetch_assoc()) {
+            if (password_verify($password, $user['password'])) {
                 $_SESSION['user'] = $user['username'];
                 $_SESSION['user_id'] = $user['id'];
-                header('location:home.php');
-                exit;
+                header('location:home.php'); exit;
             } else {
                 $error = "Invalid username or password!";
             }
-        } catch(PDOException $e) {
-            $error = "Login failed: " . $e->getMessage();
+        } else {
+            $error = "No such account!";
         }
     }
 }
 
-// Handle Signup
+// Signup POST
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['signup'])) {
     $username = trim($_POST['signup_username']);
     $password = trim($_POST['signup_password']);
-    $confirm_password = trim($_POST['confirm_password']);
     $email = trim($_POST['email']);
-    
-    if (empty($username) || empty($password) || empty($email)) {
-        $error = "All fields are required!";
-    } elseif ($password !== $confirm_password) {
+    $confirm_password = trim($_POST['confirm_password']);
+    if($username == '' || $password == '' || $email == '') {
+        $error = "All fields required!";
+    } elseif($password !== $confirm_password) {
         $error = "Passwords do not match!";
-    } elseif (strlen($password) < 6) {
+    } elseif(strlen($password)<6) {
         $error = "Password must be at least 6 characters!";
     } else {
-        try {
-            // Check if username already exists
-            $stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
-            $stmt->execute([$username]);
-            if ($stmt->fetch()) {
-                $error = "Username already exists!";
+        $stmt = $conn->prepare("SELECT * FROM users WHERE username=?");
+        $stmt->bind_param('s',$username);
+        $stmt->execute();
+        if ($stmt->get_result()->fetch_assoc()) {
+            $error = "Username already exists!";
+        } else {
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare("INSERT INTO users (username,password,email) VALUES (?,?,?)");
+            $stmt->bind_param('sss', $username, $hashed, $email);
+            if ($stmt->execute()) {
+                $success = "Account created! Please login.";
             } else {
-                // Insert new user
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $conn->prepare("INSERT INTO users (username, password, email, created_at) VALUES (?, ?, ?, datetime('now'))");
-                $stmt->execute([$username, $hashed_password, $email]);
-                
-                $success = "Account created successfully! Please login.";
+                $error = "Signup failed!";
             }
-        } catch(PDOException $e) {
-            $error = "Signup failed: " . $e->getMessage();
         }
     }
 }
 ?>
+<!-- Your HTML content for login/signup as before -->
+<!-- HTML remains the same as you posted -->
 
 <!DOCTYPE html>
 <html lang="en">
