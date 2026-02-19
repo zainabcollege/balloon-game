@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Balloon Game - Database Edition</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    #setup-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 20px 0;
+    }
+
+    #setup-screen.hidden {
+      display: none;
+    }
+
+    .setup-container {
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      max-width: 700px;
+      width: 90%;
+      margin: auto;
+    }
+
+    .setup-container h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2em;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #ddd;
+    }
+
+    .tab-btn {
+      padding: 12px 20px;
+      background: #f5f5f5;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .tab-btn.active {
+      background: #667eea;
+      color: white;
+      border-bottom-color: #667eea;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      font-size: 1em;
+      font-family: Arial, sans-serif;
+    }
+
+    .questions-section {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .question-item {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .input-group {
+      margin-bottom: 12px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #666;
+      font-size: 0.9em;
+      font-weight: normal;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 0.95em;
+    }
+
+    .btn-remove-question {
+      background: #f44336;
+      color: white;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .btn-add-question {
+      background: #2196F3;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .saved-games-list {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .game-card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .game-card:hover {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transform: translateX(5px);
+    }
+
+    .game-name {
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .game-info {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .slider-container {
+      margin-bottom: 20px;
+    }
+
+    .slider-value {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .slider-value span:last-child {
+      background: #667eea;
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 5px;
+      background: #ddd;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #667eea;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .player-names-container {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .player-name-input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 0.95em;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 15px;
+      font-size: 1.1em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    .btn-start {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .btn-start:hover {
+      background: #45a049;
+      transform: scale(1.05);
+    }
+
+    .btn-reset {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-reset:hover {
+      background: #da190b;
+      transform: scale(1.05);
+    }
+
+    .btn-load {
+      background: #FF9800;
+      color: white;
+      padding: 8px;
+      margin-top: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-load:hover {
+      background: #F57C00;
+    }
+
+    .btn-delete {
+      background: #f44336;
+      color: white;
+      padding: 8px;
+      margin-top: 10px;
+      margin-left: 5px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9em;
+    }
+
+    /* GAME SCREEN */
+    .header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      color: white;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      margin-bottom: 15px;
+    }
+
+    .players-info {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .player-card {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px 15px;
+      border-radius: 8px;
+      text-align: center;
+      min-width: 150px;
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .player-card.active {
+      background: rgba(76, 175, 80, 0.4);
+      border-color: #4CAF50;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.6);
+    }
+
+    .player-name {
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+
+    .player-score {
+      font-size: 1.3em;
+      margin-top: 5px;
+    }
+
+    .info {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+      font-size: 1.1em;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .info-item {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 15px;
+      border-radius: 20px;
+    }
+
+    #game-area {
+      width: 100%;
+      height: 600px;
+      position: relative;
+      background: linear-gradient(180deg, #b3e5fc 0%, #e0f7fa 100%);
+      overflow: hidden;
+      border: 3px solid #00bcd4;
+    }
+
+    .balloon-container {
+      position: absolute;
+      width: 70px;
+      height: 130px;
+    }
+
+    .balloon-string {
+      position: absolute;
+      width: 2px;
+      height: 40px;
+      background: linear-gradient(to bottom, rgba(100, 100, 100, 0.8), rgba(150, 150, 150, 0.4));
+      left: 34px;
+      top: 90px;
+      transform-origin: top center;
+    }
+
+    .balloon {
+      width: 70px;
+      height: 90px;
+      position: absolute;
+      cursor: pointer;
+      border: 2px solid;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      top: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      transition: all 0.2s ease;
+      word-break: break-word;
+      padding: 5px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .balloon-red { background: #FF5252; border-color: #D32F2F; }
+    .balloon-blue { background: #42A5F5; border-color: #1976D2; }
+    .balloon-yellow { background: #FFD54F; border-color: #FBC02D; color: #333; }
+    .balloon-green { background: #66BB6A; border-color: #388E3C; }
+    .balloon-purple { background: #AB47BC; border-color: #7B1FA2; }
+    .balloon-pink { background: #EC407A; border-color: #C2185B; }
+
+    .balloon:hover {
+      filter: brightness(1.15);
+    }
+
+    .balloon.selected {
+      filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+      animation: pulse 0.6s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: rotate(-45deg) scale(1); }
+      50% { transform: rotate(-45deg) scale(1.05); }
+    }
+
+    #answer-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      min-width: 350px;
+      max-width: 550px;
+      display: none;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+
+    #answer-container.show {
+      display: block;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .current-player {
+      text-align: center;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+
+    #question-text {
+      font-size: 1.3em;
+      margin-bottom: 20px;
+      color: #333;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .options-container {
+      margin-bottom: 20px;
+    }
+
+    .option-btn {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 12px;
+      background: #f5f5f5;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.05em;
+      transition: all 0.3s;
+      text-align: left;
+    }
+
+    .option-btn:hover {
+      background: #e8e8e8;
+      border-color: #667eea;
+    }
+
+    .option-btn.selected {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .option-btn.correct {
+      background: #4CAF50;
+      color: white;
+      border-color: #4CAF50;
+    }
+
+    .option-btn.incorrect {
+      background: #f44336;
+      color: white;
+      border-color: #f44336;
+    }
+
+    .timer-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 5px;
+    }
+
+    #timer {
+      font-size: 1.5em;
+      color: #4CAF50;
+      font-weight: bold;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    #timer.warning {
+      color: #FF9800;
+    }
+
+    #timer.danger {
+      color: #f44336;
+      animation: blink 0.5s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0.5; }
+    }
+
+    #submit-btn, #skip-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+
+    #submit-btn {
+      background: #4CAF50;
+      color: white;
+    }
+
+    #submit-btn:hover {
+      background: #45a049;
+    }
+
+    #submit-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    #skip-btn {
+      background: #f44336;
+      color: white;
+    }
+
+    #skip-btn:hover {
+      background: #da190b;
+    }
+
+    .pause-btn, .save-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      z-index: 500;
+    }
+
+    .pause-btn {
+      background: #FF9800;
+    }
+
+    .save-btn {
+      background: #2196F3;
+      top: 80px;
+    }
+
+    #game-area.dimmed {
+      filter: brightness(0.7);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .result-message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+      text-align: center;
+      display: none;
+    }
+
+    .result-message.correct {
+      background: #d4edda;
+      color: #155724;
+      border: 2px solid #28a745;
+      display: block;
+    }
+
+    .result-message.incorrect {
+      background: #f8d7da;
+      color: #721c24;
+      border: 2px solid #f5c6cb;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SETUP SCREEN -->
+  <div id="setup-screen">
+    <div class="setup-container">
+      <h1>🎈 Balloon Game</h1>
+      
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(0)">Create Game</button>
+        <button class="tab-btn" onclick="switchTab(1)">Saved Games</button>
+        <button class="tab-btn" onclick="switchTab(2)">Scores</button>
+      </div>
+
+      <!-- CREATE GAME TAB -->
+      <div class="tab-content active" id="tab-0">
+        <div class="form-group">
+          <label for="game-name">Game Name:</label>
+          <input type="text" id="game-name" placeholder="Enter game name" value="My Balloon Game">
+        </div>
+
+        <div class="form-group">
+          <label>Questions with Multiple Choice:</label>
+          <div class="questions-section" id="questions-section">
+            <div class="question-item">
+              <div style="font-weight: bold; margin-bottom: 10px;">Question 1:</div>
+              <div class="input-group">
+                <label>Question:</label>
+                <input type="text" class="question-text" placeholder="Enter question" value="What is 2+2?">
+              </div>
+              <div class="input-group">
+                <label>Option 1 (Correct):</label>
+                <input type="text" class="question-answer" placeholder="Correct answer" value="4">
+              </div>
+              <div class="input-group">
+                <label>Option 2:</label>
+                <input type="text" class="question-option2" placeholder="Wrong answer" value="3">
+              </div>
+              <div class="input-group">
+                <label>Option 3:</label>
+                <input type="text" class="question-option3" placeholder="Wrong answer" value="5">
+              </div>
+              <button class="btn-remove-question" onclick="removeQuestion(this)">Remove</button>
+            </div>
+          </div>
+          <button class="btn-add-question" onclick="addQuestion()">+ Add Question</button>
+        </div>
+
+        <div class="form-group slider-container">
+          <div class="slider-value">
+            <label for="player-count">Number of Players:</label>
+            <span id="player-count-value">1</span>
+          </div>
+          <input type="range" id="player-count" min="1" max="6" value="1">
+        </div>
+
+        <div id="player-names-section">
+          <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold;">Player Names:</label>
+          <div class="player-names-container" id="player-names-container">
+            <input type="text" class="player-name-input" placeholder="Player 1 Name" value="Player 1">
+          </div>
+        </div>
+
+        <div class="form-group slider-container">
+          <div class="slider-value">
+            <label for="speed-slider">Balloon Speed:</label>
+            <span id="speed-value">5</span>
+          </div>
+          <input type="range" id="speed-slider" min="1" max="10" value="5">
+        </div>
+
+        <div class="form-group slider-container">
+          <div class="slider-value">
+            <label for="timer-slider">Answer Time (seconds):</label>
+            <span id="timer-value">10</span>
+          </div>
+          <input type="range" id="timer-slider" min="3" max="30" value="10">
+        </div>
+
+        <div class="button-group">
+          <button class="btn btn-start" onclick="startGame()">Start Game</button>
+          <button class="btn btn-reset" onclick="resetForm()">Reset</button>
+        </div>
+      </div>
+
+      <!-- SAVED GAMES TAB -->
+      <div class="tab-content" id="tab-1">
+        <div class="form-group">
+          <label>Saved Games:</label>
+          <div class="saved-games-list" id="saved-games-list">
+            <p style="text-align: center; color: #999;">Loading...</p>
+          </div>
+        </div>
+        <button class="btn btn-reset" onclick="switchTab(0)" style="margin-top: 20px;">Back</button>
+      </div>
+
+      <!-- SCORES TAB -->
+      <div class="tab-content" id="tab-2">
+        <div class="form-group">
+          <label>Game Scores:</label>
+          <div class="saved-games-list" id="scores-list">
+            <p style="text-align: center; color: #999;">Loading...</p>
+          </div>
+        </div>
+        <button class="btn btn-reset" onclick="switchTab(0)" style="margin-top: 20px;">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game-screen" class="hidden">
+    <button class="pause-btn" onclick="pauseGame()">Pause</button>
+    <button class="save-btn" onclick="saveProgress()">Save Game</button>
+    
+    <div class="header">
+      <h1>🎈 Balloon Game</h1>
+      <div class="players-info" id="players-info"></div>
+      <div class="info">
+        <div class="info-item">
+          <span>Total Balloons: <strong id="balloons-left">0</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-area"></div>
+
+    <div id="answer-container">
+      <div class="current-player" id="current-player"></div>
+      <div id="question-text"></div>
+      <div class="result-message" id="result-message"></div>
+      <div class="timer-section">
+        <span style="font-weight: bold;">Time Left:</span>
+        <div id="timer">10</div>
+      </div>
+      <div class="options-container" id="options-container"></div>
+      <div class="button-group">
+        <button id="submit-btn">Submit</button>
+        <button id="skip-btn">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let gameConfig = {
+      gameName: 'My Game',
+      questions: [],
+      speed: 5,
+      answerTime: 10,
+      numPlayers: 1,
+      playerNames: ['Player 1']
+    };
+
+    let gameState = {
+      isRunning: false,
+      isPaused: false,
+      balloonSelected: false,
+      balloonCount: 0,
+      totalBalloonsCreated: 0,
+      currentBalloon: null,
+      currentQuestion: null,
+      currentTimer: null,
+      gameTimer: null,
+      balloonMovementIntervals: [],
+      currentPlayerIndex: 0,
+      players: [],
+      isSubmitting: false,
+      selectedOption: null,
+      gameId: null
+    };
+
+    const balloonClasses = ['balloon-red', 'balloon-blue', 'balloon-yellow', 'balloon-green', 'balloon-purple', 'balloon-pink'];
+
+    // TAB SWITCHING
+    function switchTab(tabIndex) {
+      const tabs = document.querySelectorAll('.tab-content');
+      const btns = document.querySelectorAll('.tab-btn');
+      
+      tabs.forEach(tab => tab.classList.remove('active'));
+      btns.forEach(btn => btn.classList.remove('active'));
+      
+      document.getElementById(`tab-${tabIndex}`).classList.add('active');
+      document.querySelectorAll('.tab-btn')[tabIndex].classList.add('active');
+
+      if (tabIndex === 1) {
+        loadSavedGames();
+      } else if (tabIndex === 2) {
+        loadScores();
+      }
+    }
+
+    // QUESTION MANAGEMENT
+    function addQuestion() {
+      const section = document.getElementById('questions-section');
+      const count = section.children.length + 1;
+      
+      const questionItem = document.createElement('div');
+      questionItem.className = 'question-item';
+      questionItem.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 10px;">Question ${count}:</div>
+        <div class="input-group">
+          <label>Question:</label>
+          <input type="text" class="question-text" placeholder="Enter question">
+        </div>
+        <div class="input-group">
+          <label>Option 1 (Correct):</label>
+          <input type="text" class="question-answer" placeholder="Correct answer">
+        </div>
+        <div class="input-group">
+          <label>Option 2:</label>
+          <input type="text" class="question-option2" placeholder="Wrong answer">
+        </div>
+        <div class="input-group">
+          <label>Option 3:</label>
+          <input type="text" class="question-option3" placeholder="Wrong answer">
+        </div>
+        <button class="btn-remove-question" onclick="removeQuestion(this)">Remove</button>
+      `;
+      section.appendChild(questionItem);
+    }
+
+    function removeQuestion(btn) {
+      btn.parentElement.remove();
+    }
+
+    function resetForm() {
+      document.getElementById('game-name').value = 'My Balloon Game';
+      document.getElementById('player-count').value = 1;
+      updatePlayerNameInputs(1);
+      document.getElementById('speed-slider').value = 5;
+      document.getElementById('timer-slider').value = 10;
+    }
+
+    document.getElementById('player-count').addEventListener('input', (e) => {
+      const count = parseInt(e.target.value);
+      document.getElementById('player-count-value').textContent = count;
+      updatePlayerNameInputs(count);
+    });
+
+    function updatePlayerNameInputs(count) {
+      const container = document.getElementById('player-names-container');
+      container.innerHTML = '';
+
+      for (let i = 1; i <= count; i++) {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'player-name-input';
+        input.placeholder = `Player ${i} Name`;
+        input.value = `Player ${i}`;
+        container.appendChild(input);
+      }
+    }
+
+    document.getElementById('speed-slider').addEventListener('input', (e) => {
+      document.getElementById('speed-value').textContent = e.target.value;
+    });
+
+    document.getElementById('timer-slider').addEventListener('input', (e) => {
+      document.getElementById('timer-value').textContent = e.target.value;
+    });
+
+    // DATABASE FUNCTIONS
+    function loadSavedGames() {
+      fetch('get_saved_games.php')
+        .then(response => response.json())
+        .then(data => {
+          const gamesList = document.getElementById('saved-games-list');
+          
+          if (data.games && data.games.length > 0) {
+            gamesList.innerHTML = '';
+            data.games.forEach((game) => {
+              const gameCard = document.createElement('div');
+              gameCard.className = 'game-card';
+              gameCard.innerHTML = `
+                <div class="game-name">${game.game_name}</div>
+                <div class="game-info">Created: ${new Date(game.created_at).toLocaleString()}</div>
+                <button class="btn-load" onclick="loadGame(${game.id})">Load Game</button>
+                <button class="btn-delete" onclick="deleteGame(${game.id})">Delete</button>
+              `;
+              gamesList.appendChild(gameCard);
+            });
+          } else {
+            gamesList.innerHTML = '<p style="text-align: center; color: #999;">No saved games yet</p>';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          document.getElementById('saved-games-list').innerHTML = '<p style="color: red;">Error loading games</p>';
+        });
+    }
+
+    function loadScores() {
+    fetch('get_game_scores.php')  // ⬅️ Use the new file
+        .then(response => response.json())
+        .then(data => {
+            const scoresList = document.getElementById('scores-list');
+            
+            if (data.scores && data.scores.length > 0) {
+                scoresList.innerHTML = '';
+                data.scores.forEach((score) => {
+                    const scoreCard = document.createElement('div');
+                    scoreCard.className = 'game-card';
+                    scoreCard.innerHTML = `
+                        <div class="game-name">${score.game_name}</div>
+                        <div class="game-info">Player: ${score.player_name}</div>
+                        <div class="game-info">Score: ${score.score} | ✓ ${score.correct} | ✗ ${score.incorrect}</div>
+                        <div class="game-info">Date: ${new Date(score.created_at).toLocaleString()}</div>
+                    `;
+                    scoresList.appendChild(scoreCard);
+                });
+            } else {
+                scoresList.innerHTML = '<p style="text-align: center; color: #999;">No scores yet</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('scores-list').innerHTML = '<p style="color: red;">Error loading scores: ' + error.message + '</p>';
+        });
+}
+
+    function loadGame(gameId) {
+      fetch('get_game_by_id.php?id=' + gameId)
+        .then(response => response.json())
+        .then(data => {
+          if (data.game) {
+            const game = data.game;
+            gameConfig.gameName = game.game_name;
+            gameConfig.questions = JSON.parse(game.questions);
+            gameConfig.speed = game.settings.speed;
+            gameConfig.answerTime = game.settings.answerTime;
+            gameConfig.numPlayers = game.settings.numPlayers;
+            gameConfig.playerNames = game.settings.playerNames;
+
+            document.getElementById('game-name').value = gameConfig.gameName;
+            document.getElementById('speed-slider').value = gameConfig.speed;
+            document.getElementById('speed-value').textContent = gameConfig.speed;
+            document.getElementById('timer-slider').value = gameConfig.answerTime;
+            document.getElementById('timer-value').textContent = gameConfig.answerTime;
+            document.getElementById('player-count').value = gameConfig.numPlayers;
+            document.getElementById('player-count-value').textContent = gameConfig.numPlayers;
+
+            const section = document.getElementById('questions-section');
+            section.innerHTML = '';
+            gameConfig.questions.forEach((q, qIndex) => {
+              const questionItem = document.createElement('div');
+              questionItem.className = 'question-item';
+              questionItem.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">Question ${qIndex + 1}:</div>
+                <div class="input-group">
+                  <label>Question:</label>
+                  <input type="text" class="question-text" placeholder="Enter question" value="${q.question}">
+                </div>
+                <div class="input-group">
+                  <label>Option 1 (Correct):</label>
+                  <input type="text" class="question-answer" placeholder="Correct answer" value="${q.answer}">
+                </div>
+                <div class="input-group">
+                  <label>Option 2:</label>
+                  <input type="text" class="question-option2" placeholder="Wrong answer" value="${q.option2}">
+                </div>
+                <div class="input-group">
+                  <label>Option 3:</label>
+                  <input type="text" class="question-option3" placeholder="Wrong answer" value="${q.option3}">
+                </div>
+                <button class="btn-remove-question" onclick="removeQuestion(this)">Remove</button>
+              `;
+              section.appendChild(questionItem);
+            });
+
+            updatePlayerNameInputs(gameConfig.numPlayers);
+            gameConfig.playerNames.forEach((name, i) => {
+              document.querySelectorAll('.player-name-input')[i].value = name;
+            });
+
+            switchTab(0);
+            alert('Game loaded successfully!');
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function deleteGame(gameId) {
+      if (confirm('Are you sure you want to delete this game?')) {
+        fetch('delete_game.php', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: 'id=' + gameId
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Game deleted successfully!');
+            loadSavedGames();
+          }
+        })
+        .catch(error => console.error('Error:', error));
+      }
+    }
+
+    // GAME LOGIC
+    function startGame() {
+      const questionItems = document.querySelectorAll('.question-item');
+      gameConfig.questions = [];
+
+      questionItems.forEach(item => {
+        const questionText = item.querySelector('.question-text').value.trim();
+        const answerText = item.querySelector('.question-answer').value.trim();
+        const option2 = item.querySelector('.question-option2').value.trim();
+        const option3 = item.querySelector('.question-option3').value.trim();
+        
+        if (questionText && answerText && option2 && option3) {
+          gameConfig.questions.push({
+            question: questionText,
+            answer: answerText,
+            option2: option2,
+            option3: option3,
+            options: [answerText, option2, option3].sort(() => Math.random() - 0.5)
+          });
+        }
+      });
+
+      if (gameConfig.questions.length === 0) {
+        alert('Please add at least one question!');
+        return;
+      }
+
+      gameConfig.gameName = document.getElementById('game-name').value || 'My Game';
+      gameConfig.speed = parseInt(document.getElementById('speed-slider').value);
+      gameConfig.answerTime = parseInt(document.getElementById('timer-slider').value);
+      gameConfig.numPlayers = parseInt(document.getElementById('player-count').value);
+
+      const playerInputs = document.querySelectorAll('.player-name-input');
+      gameConfig.playerNames = Array.from(playerInputs).map(input => input.value || 'Player');
+
+      // Save game to database
+      saveGameTemplate();
+
+      gameState.players = gameConfig.playerNames.map(name => ({
+        name: name,
+        score: 0,
+        correct: 0,
+        incorrect: 0
+      }));
+
+      gameState = {
+        isRunning: true,
+        isPaused: false,
+        balloonSelected: false,
+        balloonCount: 0,
+        totalBalloonsCreated: 0,
+        currentBalloon: null,
+        currentQuestion: null,
+        currentTimer: null,
+        gameTimer: null,
+        balloonMovementIntervals: [],
+        currentPlayerIndex: 0,
+        players: gameState.players,
+        isSubmitting: false,
+        selectedOption: null,
+        gameId: null
+      };
+
+      document.getElementById('setup-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      document.getElementById('balloons-left').textContent = gameConfig.questions.length;
+
+      updatePlayersDisplay();
+      startBalloonGeneration();
+    }
+
+    // OLD FUNCTION - REPLACE WITH THIS:
+function saveGameTemplate() {
+    const formData = new FormData();
+    formData.append('game_name', gameConfig.gameName);
+    formData.append('questions', JSON.stringify(gameConfig.questions));
+    formData.append('settings', JSON.stringify({
+        speed: gameConfig.speed,
+        answerTime: gameConfig.answerTime,
+        numPlayers: gameConfig.numPlayers,
+        playerNames: gameConfig.playerNames
+    }));
+
+    fetch('save_game_tamplate.php', {  // ⚠️ NOTE: It's "tamplate" not "template"
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            gameState.gameId = data.game_id;
+            console.log('Game saved with ID:', data.game_id); // Debug
+        } else {
+            console.error('Save failed:', data);
+        }
+    })
+    .catch(error => console.error('Error saving game:', error));
+}
+
+    function getRandomQuestion() {
+      return gameConfig.questions[Math.floor(Math.random() * gameConfig.questions.length)];
+    }
+
+    function randomPosition(max) {
+      return Math.floor(Math.random() * max);
+    }
+
+    function updatePlayersDisplay() {
+      const playersInfoDiv = document.getElementById('players-info');
+      playersInfoDiv.innerHTML = '';
+
+      gameState.players.forEach((player, index) => {
+        const playerCard = document.createElement('div');
+        playerCard.className = 'player-card';
+        if (index === gameState.currentPlayerIndex) {
+          playerCard.classList.add('active');
+        }
+        playerCard.innerHTML = `
+          <div class="player-name">${player.name}</div>
+          <div class="player-score">Score: ${player.score}</div>
+          <small>✓ ${player.correct} | ✗ ${player.incorrect}</small>
+        `;
+        playersInfoDiv.appendChild(playerCard);
+      });
+    }
+
+    function createBalloon() {
+      if (!gameState.isRunning || gameState.totalBalloonsCreated >= gameConfig.questions.length) {
+        return;
+      }
+
+      gameState.totalBalloonsCreated++;
+      gameState.balloonCount++;
+
+      const container = document.createElement('div');
+      container.className = 'balloon-container';
+      
+      const gameArea = document.getElementById('game-area');
+      const randomX = randomPosition(gameArea.offsetWidth - 70);
+      container.style.left = randomX + 'px';
+      
+      const randomY = randomPosition(gameArea.offsetHeight - 150) + 100;
+      container.style.top = randomY + 'px';
+
+      const balloonString = document.createElement('div');
+      balloonString.className = 'balloon-string';
+      const swingAngle = (Math.random() - 0.5) * 5;
+      balloonString.style.transform = `rotate(${swingAngle}deg)`;
+      container.appendChild(balloonString);
+
+      const balloon = document.createElement('div');
+      balloon.className = 'balloon ' + balloonClasses[Math.floor(Math.random() * balloonClasses.length)];
+      
+      const question = getRandomQuestion();
+      balloon.textContent = '?';
+      
+      balloon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (gameState.isRunning && !gameState.isPaused && !gameState.balloonSelected) {
+          selectBalloon(balloon, container, balloonString, question);
+        }
+      });
+
+      container.appendChild(balloon);
+      gameArea.appendChild(container);
+
+      let currentY = randomY;
+      let swingDirection = Math.random() > 0.5 ? 1 : -1;
+      let swingAmount = 0;
+      
+      const speedDuration = 11 - gameConfig.speed;
+      
+      const moveInterval = setInterval(() => {
+        if (!gameState.isRunning) {
+          clearInterval(moveInterval);
+          return;
+        }
+
+        if (gameState.balloonSelected) {
+          return;
+        }
+
+        if (!gameState.isPaused) {
+          currentY -= speedDuration * 0.3;
+          container.style.top = currentY + 'px';
+          
+          swingAmount += swingDirection * 0.3;
+          if (Math.abs(swingAmount) > 8) {
+            swingDirection *= -1;
+          }
+          balloonString.style.transform = `rotate(${swingAmount}deg)`;
+        }
+        
+        if (currentY < -130) {
+          clearInterval(moveInterval);
+          if (container.parentNode) {
+            container.parentNode.removeChild(container);
+          }
+          gameState.balloonCount--;
+          updateBalloonCount();
+        }
+      }, 30);
+
+      gameState.balloonMovementIntervals.push(moveInterval);
+      updateBalloonCount();
+    }
+
+    function startBalloonGeneration() {
+      createBalloon();
+
+      gameState.gameTimer = setInterval(() => {
+        if (gameState.isRunning && !gameState.isPaused && !gameState.balloonSelected) {
+          createBalloon();
+        }
+      }, 1500);
+    }
+
+    function selectBalloon(balloon, container, balloonString, question) {
+      gameState.balloonSelected = true;
+      document.getElementById('game-area').classList.add('dimmed');
+
+      if (gameState.currentTimer) {
+        clearInterval(gameState.currentTimer);
+      }
+
+      gameState.currentBalloon = { balloon, container, balloonString };
+      gameState.currentQuestion = question;
+      gameState.selectedOption = null;
+      
+      document.getElementById('question-text').textContent = question.question;
+
+      const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      document.getElementById('current-player').textContent = `🎮 ${currentPlayer.name}'s Turn`;
+
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      question.options.forEach((option) => {
+        const optionBtn = document.createElement('button');
+        optionBtn.className = 'option-btn';
+        optionBtn.textContent = option;
+        optionBtn.onclick = () => selectOption(option, optionBtn);
+        optionsContainer.appendChild(optionBtn);
+      });
+
+      document.getElementById('result-message').classList.remove('correct', 'incorrect');
+      document.getElementById('result-message').textContent = '';
+
+      document.getElementById('answer-container').classList.add('show');
+      balloon.classList.add('selected');
+
+      startAnswerTimer();
+    }
+
+    function selectOption(option, optionBtn) {
+      document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+      optionBtn.classList.add('selected');
+      gameState.selectedOption = option;
+    }
+
+    function startAnswerTimer() {
+      let timeLeft = gameConfig.answerTime;
+      const timerDisplay = document.getElementById('timer');
+
+      timerDisplay.textContent = timeLeft;
+      timerDisplay.classList.remove('warning', 'danger');
+
+      gameState.currentTimer = setInterval(() => {
+        timeLeft--;
+        timerDisplay.textContent = timeLeft;
+
+        if (timeLeft <= 3) {
+          timerDisplay.classList.add('danger');
+          timerDisplay.classList.remove('warning');
+        } else if (timeLeft <= 5) {
+          timerDisplay.classList.add('warning');
+          timerDisplay.classList.remove('danger');
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(gameState.currentTimer);
+          timeExpired();
+        }
+      }, 1000);
+    }
+
+    function timeExpired() {
+      const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      currentPlayer.incorrect++;
+      popBalloon(false, 'Time Expired!');
+      document.getElementById('answer-container').classList.remove('show');
+      
+      if (gameState.currentTimer) {
+        clearInterval(gameState.currentTimer);
+      }
+
+      resumeBalloonMovement();
+      nextPlayer();
+    }
+
+    function checkAnswer() {
+      if (gameState.isSubmitting || !gameState.selectedOption) {
+        alert('Please select an option!');
+        return;
+      }
+
+      gameState.isSubmitting = true;
+      document.getElementById('submit-btn').disabled = true;
+
+      const userAnswer = gameState.selectedOption;
+      const correctAnswer = gameState.currentQuestion.answer;
+      
+      if (gameState.currentTimer) {
+        clearInterval(gameState.currentTimer);
+      }
+
+      const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      const isCorrect = userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+
+      if (isCorrect) {
+        currentPlayer.score += 10;
+        currentPlayer.correct++;
+        popBalloon(true, '✓ Correct!');
+        showResultMessage(true, 'Correct Answer!');
+        highlightCorrectOption(correctAnswer);
+      } else {
+        currentPlayer.incorrect++;
+        popBalloon(false, '✗ Wrong!');
+        showResultMessage(false, `Wrong! Answer: ${correctAnswer}`);
+        highlightWrongOption(userAnswer, correctAnswer);
+      }
+      
+      logAttempt(currentPlayer.name, gameState.currentQuestion.question, userAnswer, isCorrect);
+
+      setTimeout(() => {
+        document.getElementById('answer-container').classList.remove('show');
+        resumeBalloonMovement();
+        nextPlayer();
+        gameState.isSubmitting = false;
+        document.getElementById('submit-btn').disabled = false;
+      }, 2000);
+    }
+
+    function highlightCorrectOption(correctAnswer) {
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        if (btn.textContent === correctAnswer) {
+          btn.classList.add('correct');
+        }
+      });
+    }
+
+    function highlightWrongOption(userAnswer, correctAnswer) {
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        if (btn.textContent === userAnswer) {
+          btn.classList.add('incorrect');
+        }
+        if (btn.textContent === correctAnswer) {
+          btn.classList.add('correct');
+        }
+      });
+    }
+
+    function showResultMessage(isCorrect, message) {
+      const resultMsg = document.getElementById('result-message');
+      resultMsg.textContent = message;
+      resultMsg.classList.remove('correct', 'incorrect');
+      resultMsg.classList.add(isCorrect ? 'correct' : 'incorrect');
+    }
+
+    function logAttempt(playerName, question, answer, isCorrect) {
+      if (!gameState.gameId) return;
+
+      const formData = new FormData();
+      formData.append('game_id', gameState.gameId);
+      formData.append('player_name', playerName);
+      formData.append('question', question);
+      formData.append('answer', answer);
+      formData.append('correct_answer', gameState.currentQuestion.answer);
+      formData.append('is_correct', isCorrect ? 1 : 0);
+
+      fetch('log_game_attempt.php', {
+        method: 'POST',
+        body: formData
+      })
+      .catch(error => console.error('Logging error:', error));
+    }
+
+    function skipQuestion() {
+      const currentPlayer = gameState.players[gameState.currentPlayerIndex];
+      currentPlayer.incorrect++;
+      
+      if (gameState.currentTimer) {
+        clearInterval(gameState.currentTimer);
+      }
+
+      if (gameState.currentBalloon) {
+        popBalloon(false, 'Skipped');
+      }
+      
+      document.getElementById('answer-container').classList.remove('show');
+      resumeBalloonMovement();
+      nextPlayer();
+    }
+
+    function nextPlayer() {
+      gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+      updatePlayersDisplay();
+    }
+
+    function resumeBalloonMovement() {
+      gameState.balloonSelected = false;
+      document.getElementById('game-area').classList.remove('dimmed');
+    }
+
+    function popBalloon(correct, message) {
+      if (gameState.currentBalloon && gameState.currentBalloon.container.parentNode) {
+        if (correct) {
+          gameState.currentBalloon.balloon.style.background = '#4CAF50';
+        } else {
+          gameState.currentBalloon.balloon.style.background = '#f44336';
+        }
+        gameState.currentBalloon.balloon.textContent = message;
+        
+        gameState.currentBalloon.balloon.classList.remove('selected');
+        gameState.currentBalloon.balloon.style.transform = 'rotate(-45deg) scale(0)';
+        gameState.currentBalloon.balloon.style.opacity = '0';
+        
+        setTimeout(() => {
+          if (gameState.currentBalloon.container.parentNode) {
+            gameState.currentBalloon.container.parentNode.removeChild(gameState.currentBalloon.container);
+          }
+          gameState.balloonCount--;
+          updateBalloonCount();
+        }, 500);
+      }
+    }
+
+    function updateBalloonCount() {
+      document.getElementById('balloons-left').textContent = gameState.balloonCount;
+      
+      if (gameState.totalBalloonsCreated >= gameConfig.questions.length && gameState.balloonCount === 0) {
+        endGame();
+      }
+    }
+
+    function saveProgress() {
+      if (!gameState.gameId) {
+        alert('Game not saved to database yet');
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('game_id', gameState.gameId);
+      formData.append('players', JSON.stringify(gameState.players));
+
+      fetch('save_game_progress.php', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Game progress saved!');
+        }
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    function endGame() {
+      gameState.isRunning = false;
+      clearInterval(gameState.gameTimer);
+      
+      if (gameState.currentTimer) {
+        clearInterval(gameState.currentTimer);
+      }
+
+      const sortedPlayers = [...gameState.players].sort((a, b) => b.score - a.score);
+      
+      let message = 'Game Over!\n\n';
+      message += '=== Final Scores ===\n';
+      sortedPlayers.forEach((player, index) => {
+        message += `${index + 1}. ${player.name}: ${player.score} (${player.correct}✓ ${player.incorrect}✗)\n`;
+      });
+
+      saveGameScores();
+      alert(message);
+      
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('setup-screen').classList.remove('hidden');
+      resetForm();
+    }
+
+    function saveGameScores() {
+      if (!gameState.gameId) return;
+
+      const formData = new FormData();
+      formData.append('game_id', gameState.gameId);
+      formData.append('players', JSON.stringify(gameState.players));
+
+      fetch('save_game_scores.php', {
+        method: 'POST',
+        body: formData
+      })
+      .catch(error => console.error('Error:', error));
+    }
+
+    function pauseGame() {
+      gameState.isPaused = !gameState.isPaused;
+      const pauseBtn = document.querySelector('.pause-btn');
+      pauseBtn.textContent = gameState.isPaused ? 'Resume' : 'Pause';
+      pauseBtn.style.background = gameState.isPaused ? '#4CAF50' : '#FF9800';
+    }
+
+    document.getElementById('submit-btn').addEventListener('click', checkAnswer);
+    document.getElementById('skip-btn').addEventListener('click', skipQuestion);
+
+    window.onload = () => {
+      document.getElementById('setup-screen').classList.remove('hidden');
+      document.getElementById('game-screen').classList.add('hidden');
+      updatePlayerNameInputs(1);
+    };
+  </script>
+</body>
+</html>
