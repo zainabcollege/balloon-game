@@ -1,33 +1,28 @@
 <?php
 session_start();
 include('config.php');
-
-// Check if user is logged in
 if (!isset($_SESSION['user'])) {
-    header("location:index.php");
-    exit;
+    header("location:index.php"); exit;
 }
-
-// Get user info
 $user = $_SESSION['user'];
-$user_id = $_SESSION['user_id'] ?? null;
+$user_id = $_SESSION['user_id'];
 
-// Get user stats
-try {
-    $stmt = $conn->prepare("SELECT COUNT(*) as game_count FROM games");
-    $stmt->execute();
-    $totalGames = $stmt->fetch()['game_count'];
-    
-    $stmt = $conn->prepare("SELECT SUM(score) as total_score FROM game_scores WHERE game_id IN (SELECT id FROM games)");
-    $stmt->execute();
-    $result = $stmt->fetch();
-    $totalScore = $result['total_score'] ?? 0;
-} catch(PDOException $e) {
-    $totalGames = 0;
-    $totalScore = 0;
-}
+$stmt = $conn->prepare("SELECT COUNT(*) as game_count FROM games WHERE user_id=?");
+$stmt->bind_param('i',$user_id);
+$stmt->execute();
+$res = $stmt->get_result();
+$row = $res->fetch_assoc();
+$totalGames = $row ? $row['game_count'] : 0;
+
+$stmt = $conn->prepare("SELECT SUM(score) as total_score FROM game_scores WHERE game_id IN (SELECT id FROM games WHERE user_id=?)");
+$stmt->bind_param('i',$user_id);
+$stmt->execute();
+$res = $stmt->get_result();
+$row = $res->fetch_assoc();
+$totalScore = $row ? $row['total_score'] : 0;
 ?>
-
+<!-- Your HTML content for home/dashboard as before -->
+<!-- HTML remains the same as you posted -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -221,9 +216,9 @@ try {
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-            <a href="balloon-game.html" class="btn btn-play">🎮 Play Game</a>
-            <a href="balloon-game.html" class="btn btn-saved">💾 My Games</a>
-            <a href="balloon-game.html" class="btn btn-scores">🏆 Leaderboard</a>
+            <a href="balloon-game.php" class="btn btn-play">🎮 Play Game</a>
+            <a href="my-games.php" class="btn btn-saved">💾 My Games</a>
+            <a href="leaderboard.php" class="btn btn-scores">🏆 Leaderboard</a>
         </div>
     </div>
 </body>
