@@ -1,3 +1,12 @@
+<?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header("Location: index.php");
+    exit;
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -811,6 +820,12 @@
   </div>
 
   <script>
+
+    function getUrlParam(param) {
+        let params = new URLSearchParams(window.location.search);
+        return params.get(param);
+    }
+
     let gameConfig = {
       gameName: 'My Game',
       questions: [],
@@ -841,6 +856,22 @@
     const balloonClasses = ['balloon-red', 'balloon-blue', 'balloon-yellow', 'balloon-green', 'balloon-purple', 'balloon-pink'];
 
     // TAB SWITCHING
+    // Function to get URL parameter
+
+
+// On page load: If ?game_id=... is present, load it
+window.onload = function() {
+      document.getElementById('setup-screen').classList.remove('hidden');
+      document.getElementById('game-screen').classList.add('hidden');
+      updatePlayerNameInputs(1);
+
+      // Autoload game if URL has ?game_id=...
+      let gameId = getUrlParam('game_id');
+      if (gameId) {
+        loadGame(gameId);
+        switchTab(0); // Optional: show the Create Game tab after loading
+      }
+    };
     function switchTab(tabIndex) {
       const tabs = document.querySelectorAll('.tab-content');
       const btns = document.querySelectorAll('.tab-btn');
@@ -993,8 +1024,9 @@
         .then(data => {
           if (data.game) {
             const game = data.game;
+            // These lines populate your form and data objects:
             gameConfig.gameName = game.game_name;
-            gameConfig.questions = JSON.parse(game.questions);
+            gameConfig.questions = typeof game.questions === "string" ? JSON.parse(game.questions) : game.questions;
             gameConfig.speed = game.settings.speed;
             gameConfig.answerTime = game.settings.answerTime;
             gameConfig.numPlayers = game.settings.numPlayers;
@@ -1008,6 +1040,7 @@
             document.getElementById('player-count').value = gameConfig.numPlayers;
             document.getElementById('player-count-value').textContent = gameConfig.numPlayers;
 
+            // Rebuild question UI
             const section = document.getElementById('questions-section');
             section.innerHTML = '';
             gameConfig.questions.forEach((q, qIndex) => {
@@ -1041,8 +1074,11 @@
               document.querySelectorAll('.player-name-input')[i].value = name;
             });
 
+            // Automatically switch to Create Game tab and display loaded game
             switchTab(0);
             alert('Game loaded successfully!');
+          } else {
+            alert('Could not load game!');
           }
         })
         .catch(error => console.error('Error:', error));
@@ -1582,11 +1618,7 @@ function saveGameTemplate() {
     document.getElementById('submit-btn').addEventListener('click', checkAnswer);
     document.getElementById('skip-btn').addEventListener('click', skipQuestion);
 
-    window.onload = () => {
-      document.getElementById('setup-screen').classList.remove('hidden');
-      document.getElementById('game-screen').classList.add('hidden');
-      updatePlayerNameInputs(1);
-    };
+    
   </script>
 </body>
 </html>
