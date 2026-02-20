@@ -8,38 +8,77 @@ $stmt = $conn->prepare(
     JOIN games g ON gs.game_id = g.id
     ORDER BY score DESC, correct DESC
     LIMIT 20"
-); // show top 20 scores
+);
 $stmt->execute();
 $res = $stmt->get_result();
 ?>
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaderboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>Leaderboard</h1>
-<table border="1">
-<tr>
-    <th>Game</th>
-    <th>Player Name</th>
-    <th>Score</th>
-    <th>Correct</th>
-    <th>Incorrect</th>
-    <th>Date</th>
-</tr>
-<?php while($row = $res->fetch_assoc()): ?>
-<tr>
-    <td><?= htmlspecialchars($row['game_name']) ?></td>
-    <td><?= htmlspecialchars($row['player_name']) ?></td>
-    <td><?= $row['score'] ?></td>
-    <td><?= $row['correct'] ?></td>
-    <td><?= $row['incorrect'] ?></td>
-    <td><?= $row['created_at'] ?></td>
-</tr>
-<?php endwhile; ?>
-</table>
-<a href="home.php">Back to Home</a>
+    <div class="page-container">
+        <div class="page-header">
+            <h1>🏆 Leaderboard</h1>
+            <p class="subtitle">Top 20 Scores</p>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="data-table leaderboard-table">
+                <thead>
+                    <tr>
+                        <th class="rank-col">Rank</th>
+                        <th>Game</th>
+                        <th>Player Name</th>
+                        <th>Score</th>
+                        <th>✓ Correct</th>
+                        <th>✗ Incorrect</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    $rank = 1;
+                    if($res->num_rows > 0): 
+                    ?>
+                        <?php while($row = $res->fetch_assoc()): ?>
+                        <tr class="<?= $rank <= 3 ? 'rank-' . $rank : '' ?>">
+                            <td class="rank-cell">
+                                <?php if($rank == 1): ?>
+                                    🥇
+                                <?php elseif($rank == 2): ?>
+                                    🥈
+                                <?php elseif($rank == 3): ?>
+                                    🥉
+                                <?php else: ?>
+                                    <?= $rank ?>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= htmlspecialchars($row['game_name']) ?></td>
+                            <td><?= htmlspecialchars($row['player_name']) ?></td>
+                            <td class="score-cell"><strong><?= $row['score'] ?></strong></td>
+                            <td class="correct-cell"><?= $row['correct'] ?></td>
+                            <td class="incorrect-cell"><?= $row['incorrect'] ?></td>
+                            <td class="date-cell"><?= $row['created_at'] ?></td>
+                        </tr>
+                        <?php $rank++; ?>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="no-data">No scores yet. <a href="balloon-game.php">Play a game</a></td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="page-footer">
+            <a href="home.php" class="btn btn-back">← Back to Home</a>
+        </div>
+    </div>
 </body>
 </html>
-
