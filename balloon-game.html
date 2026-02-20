@@ -6,7 +6,6 @@ if (!isset($_SESSION['user'])) {
 }
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,7 +38,7 @@ if (!isset($_SESSION['user'])) {
           <label>Questions with Multiple Choice:</label>
           <div class="questions-section" id="questions-section">
             <div class="question-item">
-              <div style="font-weight: bold; margin-bottom: 10px;">Question 1:</div>
+              <div>Question 1:</div>
               <div class="input-group">
                 <label>Question:</label>
                 <input type="text" class="question-text" placeholder="Enter question" value="What is 2+2?">
@@ -71,7 +70,7 @@ if (!isset($_SESSION['user'])) {
         </div>
 
         <div id="player-names-section">
-          <label style="display: block; margin-bottom: 8px; color: #333; font-weight: bold;">Player Names:</label>
+          <label>Player Names:</label>
           <div class="player-names-container" id="player-names-container">
             <input type="text" class="player-name-input" placeholder="Player 1 Name" value="Player 1">
           </div>
@@ -104,10 +103,10 @@ if (!isset($_SESSION['user'])) {
         <div class="form-group">
           <label>Saved Games:</label>
           <div class="saved-games-list" id="saved-games-list">
-            <p style="text-align: center; color: #999;">Loading...</p>
+            <p>Loading...</p>
           </div>
         </div>
-        <button class="btn btn-reset" onclick="switchTab(0)" style="margin-top: 20px;">Back</button>
+        <button class="btn btn-reset" onclick="switchTab(0)">Back</button>
       </div>
 
       <!-- SCORES TAB -->
@@ -115,10 +114,10 @@ if (!isset($_SESSION['user'])) {
         <div class="form-group">
           <label>Game Scores:</label>
           <div class="saved-games-list" id="scores-list">
-            <p style="text-align: center; color: #999;">Loading...</p>
+            <p>Loading...</p>
           </div>
         </div>
-        <button class="btn btn-reset" onclick="switchTab(0)" style="margin-top: 20px;">Back</button>
+        <button class="btn btn-reset" onclick="switchTab(0)">Back</button>
       </div>
     </div>
   </div>
@@ -145,7 +144,7 @@ if (!isset($_SESSION['user'])) {
       <div id="question-text"></div>
       <div class="result-message" id="result-message"></div>
       <div class="timer-section">
-        <span style="font-weight: bold;">Time Left:</span>
+        <span>Time Left:</span>
         <div id="timer">10</div>
       </div>
       <div class="options-container" id="options-container"></div>
@@ -192,12 +191,8 @@ if (!isset($_SESSION['user'])) {
 
     const balloonClasses = ['balloon-red', 'balloon-blue', 'balloon-yellow', 'balloon-green', 'balloon-purple', 'balloon-pink'];
 
-    // TAB SWITCHING
-    // Function to get URL parameter
-
-
-// On page load: If ?game_id=... is present, load it
-window.onload = function() {
+    // On page load: If ?game_id=... is present, load it
+    window.onload = function() {
       document.getElementById('setup-screen').classList.remove('hidden');
       document.getElementById('game-screen').classList.add('hidden');
       updatePlayerNameInputs(1);
@@ -209,6 +204,7 @@ window.onload = function() {
         switchTab(0); // Optional: show the Create Game tab after loading
       }
     };
+
     function switchTab(tabIndex) {
       const tabs = document.querySelectorAll('.tab-content');
       const btns = document.querySelectorAll('.tab-btn');
@@ -234,7 +230,7 @@ window.onload = function() {
       const questionItem = document.createElement('div');
       questionItem.className = 'question-item';
       questionItem.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 10px;">Question ${count}:</div>
+        <div>Question ${count}:</div>
         <div class="input-group">
           <label>Question:</label>
           <input type="text" class="question-text" placeholder="Enter question">
@@ -317,43 +313,43 @@ window.onload = function() {
               gamesList.appendChild(gameCard);
             });
           } else {
-            gamesList.innerHTML = '<p style="text-align: center; color: #999;">No saved games yet</p>';
+            gamesList.innerHTML = '<p>No saved games yet</p>';
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          document.getElementById('saved-games-list').innerHTML = '<p style="color: red;">Error loading games</p>';
+          document.getElementById('saved-games-list').innerHTML = '<p>Error loading games</p>';
         });
     }
 
     function loadScores() {
-    fetch('get_game_scores.php')  // ⬅️ Use the new file
+      fetch('get_game_scores.php')
         .then(response => response.json())
         .then(data => {
-            const scoresList = document.getElementById('scores-list');
-            
-            if (data.scores && data.scores.length > 0) {
-                scoresList.innerHTML = '';
-                data.scores.forEach((score) => {
-                    const scoreCard = document.createElement('div');
-                    scoreCard.className = 'game-card';
-                    scoreCard.innerHTML = `
-                        <div class="game-name">${score.game_name}</div>
-                        <div class="game-info">Player: ${score.player_name}</div>
-                        <div class="game-info">Score: ${score.score} | ✓ ${score.correct} | ✗ ${score.incorrect}</div>
-                        <div class="game-info">Date: ${new Date(score.created_at).toLocaleString()}</div>
-                    `;
-                    scoresList.appendChild(scoreCard);
-                });
-            } else {
-                scoresList.innerHTML = '<p style="text-align: center; color: #999;">No scores yet</p>';
-            }
+          const scoresList = document.getElementById('scores-list');
+          
+          if (data.scores && data.scores.length > 0) {
+            scoresList.innerHTML = '';
+            data.scores.forEach((score) => {
+              const scoreCard = document.createElement('div');
+              scoreCard.className = 'game-card';
+              scoreCard.innerHTML = `
+                <div class="game-name">${score.game_name}</div>
+                <div class="game-info">Player: ${score.player_name}</div>
+                <div class="game-info">Score: ${score.score} | ✓ ${score.correct} | ✗ ${score.incorrect}</div>
+                <div class="game-info">Date: ${new Date(score.created_at).toLocaleString()}</div>
+              `;
+              scoresList.appendChild(scoreCard);
+            });
+          } else {
+            scoresList.innerHTML = '<p>No scores yet</p>';
+          }
         })
         .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('scores-list').innerHTML = '<p style="color: red;">Error loading scores: ' + error.message + '</p>';
+          console.error('Error:', error);
+          document.getElementById('scores-list').innerHTML = '<p>Error loading scores: ' + error.message + '</p>';
         });
-}
+    }
 
     function loadGame(gameId) {
       fetch('get_game_by_id.php?id=' + gameId)
@@ -384,7 +380,7 @@ window.onload = function() {
               const questionItem = document.createElement('div');
               questionItem.className = 'question-item';
               questionItem.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 10px;">Question ${qIndex + 1}:</div>
+                <div>Question ${qIndex + 1}:</div>
                 <div class="input-group">
                   <label>Question:</label>
                   <input type="text" class="question-text" placeholder="Enter question" value="${q.question}">
@@ -510,33 +506,32 @@ window.onload = function() {
       startBalloonGeneration();
     }
 
-    // OLD FUNCTION - REPLACE WITH THIS:
-function saveGameTemplate() {
-    const formData = new FormData();
-    formData.append('game_name', gameConfig.gameName);
-    formData.append('questions', JSON.stringify(gameConfig.questions));
-    formData.append('settings', JSON.stringify({
+    function saveGameTemplate() {
+      const formData = new FormData();
+      formData.append('game_name', gameConfig.gameName);
+      formData.append('questions', JSON.stringify(gameConfig.questions));
+      formData.append('settings', JSON.stringify({
         speed: gameConfig.speed,
         answerTime: gameConfig.answerTime,
         numPlayers: gameConfig.numPlayers,
         playerNames: gameConfig.playerNames
-    }));
+      }));
 
-    fetch('save_game_tamplate.php', {  // ⚠️ NOTE: It's "tamplate" not "template"
+      fetch('save_game_template.php', {
         method: 'POST',
         body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
+      })
+      .then(response => response.json())
+      .then(data => {
         if (data.success) {
-            gameState.gameId = data.game_id;
-            console.log('Game saved with ID:', data.game_id); // Debug
+          gameState.gameId = data.game_id;
+          console.log('Game saved with ID:', data.game_id);
         } else {
-            console.error('Save failed:', data);
+          console.error('Save failed:', data);
         }
-    })
-    .catch(error => console.error('Error saving game:', error));
-}
+      })
+      .catch(error => console.error('Error saving game:', error));
+    }
 
     function getRandomQuestion() {
       return gameConfig.questions[Math.floor(Math.random() * gameConfig.questions.length)];
@@ -955,7 +950,6 @@ function saveGameTemplate() {
     document.getElementById('submit-btn').addEventListener('click', checkAnswer);
     document.getElementById('skip-btn').addEventListener('click', skipQuestion);
 
-    
   </script>
 </body>
 </html>
